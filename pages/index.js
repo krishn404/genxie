@@ -1,115 +1,184 @@
-import Image from "next/image";
-import localFont from "next/font/local";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+import { useState } from 'react';
+import { getFormattedDocument } from '../lib/gemini';
+import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import { saveAs } from 'file-saver';
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [prompt, setPrompt] = useState('');
+  const [documentContent, setDocumentContent] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState('Untitled Document');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Function to generate the formatted document from the Gemini API
+  const generateDocument = async () => {
+    if (!prompt) {
+      alert('Please enter a prompt');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const result = await getFormattedDocument(prompt);
+      
+      if (result && result.formattedText) {
+        setDocumentContent(result.formattedText);
+        setDocumentTitle(result.title || 'Generated Document Title'); // Set dynamic title from result or fallback
+      } else {
+        setDocumentContent('Error: Could not generate document.');
+      }
+    } catch (error) {
+      console.error('Error generating document:', error);
+      setDocumentContent('Error: Could not generate document.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to strip HTML tags and decode entities
+  const stripHtml = (html) => {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+  // Exporting the formatted content as PDF
+  const exportAsPDF = () => {
+    const doc = new jsPDF();
+    const plainText = stripHtml(documentContent || 'No content');
+    doc.text(plainText, 10, 10);
+    doc.save(`${documentTitle}.pdf`); // Use documentTitle for saving
+  };
+
+  // Exporting the formatted content as DOCX
+  const exportAsDocx = async () => {
+    const plainText = stripHtml(documentContent || 'No content');
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              children: [new TextRun(plainText)],
+            }),
+          ],
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${documentTitle}.docx`); // Use documentTitle for saving
+  };
+
+  return (
+    <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Side - Document Generator */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-2">Document Generator</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Enter a prompt to generate a formatted document.
+          </p>
+          <textarea
+            className="w-full h-64 p-4 border rounded-lg mb-4 bg-gray-100 resize-none"
+            placeholder="Enter your document prompt here..."
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <input
+            type="text"
+            className="w-full p-2 border rounded-lg mb-4"
+            placeholder="Enter document title..."
+            value={documentTitle}
+            onChange={(e) => setDocumentTitle(e.target.value)} // Input for document title
+          />
+          <div className="flex space-x-2">
+            <button
+              className="bg-gray-300 text-black px-4 py-2 rounded"
+              onClick={() => setPrompt('')}
+            >
+              Clear
+            </button>
+            <button
+              className="bg-gray-300 text-black px-4 py-2 rounded"
+              onClick={generateDocument}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Generating...' : 'Generate'}
+            </button>
+            <button
+              className="bg-gray-300 text-black px-4 py-2 rounded"
+            >
+              Edit
+            </button>
+            <button
+              className="bg-gray-300 text-black px-4 py-2 rounded flex items-center"
+            >
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+              Edit
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Right Side - Document Preview */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-2">Document Preview</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            This is how your document will be formatted.
+          </p>
+          <input
+            type="text"
+            className="w-full p-2 border rounded-lg mb-4"
+            value={documentTitle} // Editable title for preview
+            onChange={(e) => setDocumentTitle(e.target.value)} // Update title in real-time
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className="bg-white border rounded-lg p-4 min-h-[300px] mb-4">
+            {documentContent ? (
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: documentContent }} />
+              </div>
+            ) : (
+              <div>
+                <h1 className="text-2xl font-bold mb-4">Introduction</h1>
+                <p className="mb-4">
+                  This is a sample document generated based on the users prompt. The
+                  content and formatting will adjust dynamically as the user updates
+                  the prompt.
+                </p>
+                <h2 className="text-xl font-bold mb-2">Key Highlights</h2>
+                <ul className="list-disc pl-5 mb-4">
+                  <li>Clean, professional layout</li>
+                  <li>Automatic formatting based on prompt</li>
+                  <li>Export to PDF or DOCX</li>
+                  <li>Edit document directly in the tool</li>
+                </ul>
+                <h2 className="text-xl font-bold mb-2">Conclusion</h2>
+                <p>
+                  This document generator tool provides a seamless experience for
+                  creating professional-looking documents with minimal effort.
+                </p>
+              </div>
+            )}
+          </div>
+          {documentContent && (
+            <div className="flex justify-between">
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded"
+                onClick={exportAsPDF}
+              >
+                Export to PDF
+              </button>
+              <button
+                className="bg-gray-300 text-black px-4 py-2 rounded"
+                onClick={exportAsDocx}
+              >
+                Export to DOCX
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

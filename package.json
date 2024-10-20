@@ -9,14 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^1.7.7",
+    "docx": "^9.0.2",
+    "file-saver": "^2.0.5",
+    "filesaver": "^0.0.13",
+    "html-docx-js": "^0.3.1",
+    "html-to-docx": "^1.8.0",
+    "html2pdf.js": "^0.10.2",
+    "jspdf": "^2.5.2",
+    "next": "14.2.15",
     "react": "^18",
-    "react-dom": "^18",
-    "next": "14.2.15"
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
     "eslint": "^8",
-    "eslint-config-next": "14.2.15"
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1"
   }
 }
