@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getFormattedDocument } from '../lib/gemini';
+import { getFormattedDocument } from '../lib/gemini.js';
 import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
@@ -23,7 +23,7 @@ export default function Home() {
       
       if (result && result.formattedText) {
         setDocumentContent(result.formattedText);
-        setDocumentTitle(result.title || 'Generated Document Title'); // Set dynamic title from result or fallback
+        setDocumentTitle(result.title || 'Generated Document Title'); 
       } else {
         setDocumentContent('Error: Could not generate document.');
       }
@@ -45,14 +45,27 @@ export default function Home() {
   // Exporting the formatted content as PDF
   const exportAsPDF = () => {
     const doc = new jsPDF();
-    const plainText = stripHtml(documentContent || 'No content');
-    doc.text(plainText, 10, 10);
-    doc.save(`${documentTitle}.pdf`); // Use documentTitle for saving
+    // Use the documentContent directly instead of stripping HTML
+    const htmlContent = documentContent || 'No content';
+    doc.html(htmlContent, {
+      callback: function (doc) {
+        doc.save(`${documentTitle}.pdf`); // Use documentTitle for saving
+      },
+      x: 10,
+      y: 10,
+    });
+  };
+
+  // Function to convert HTML to plain text
+  const convertHtmlToPlainText = (html) => {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.innerText || tmp.textContent || '';
   };
 
   // Exporting the formatted content as DOCX
   const exportAsDocx = async () => {
-    const plainText = stripHtml(documentContent || 'No content');
+    const plainText = convertHtmlToPlainText(documentContent || 'No content');
     const doc = new Document({
       sections: [
         {

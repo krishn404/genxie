@@ -9,22 +9,30 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.20",
     "axios": "^1.7.7",
+    "classnames": "^2.5.1",
+    "clsx": "^2.1.1",
     "docx": "^9.0.2",
+    "docxtemplater": "^3.51.1",
     "file-saver": "^2.0.5",
     "filesaver": "^0.0.13",
+    "framer-motion": "^11.11.9",
     "html-docx-js": "^0.3.1",
     "html-to-docx": "^1.8.0",
+    "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.2",
     "next": "14.2.15",
+    "pizzip": "^3.1.7",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
     "eslint": "^8",
     "eslint-config-next": "14.2.15",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1"
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14"
   }
 }
