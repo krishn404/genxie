@@ -3,12 +3,15 @@ import { getFormattedDocument } from '../lib/gemini.js';
 import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
+import RichTextEditor from '../components/RichTextEditor';
+import DocumentTypeSelector from '../components/DocumentTypeSelector'; // Import the new component
 
-export default function Home() {
+export default function DocumentGenerate() {
   const [prompt, setPrompt] = useState('');
   const [documentContent, setDocumentContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [documentTitle, setDocumentTitle] = useState('Untitled Document');
+  const [documentType, setDocumentType] = useState('Report'); // New state for document type
 
   // Function to generate the formatted document from the Gemini API
   const generateDocument = async () => {
@@ -45,11 +48,10 @@ export default function Home() {
   // Exporting the formatted content as PDF
   const exportAsPDF = () => {
     const doc = new jsPDF();
-    // Use the documentContent directly instead of stripping HTML
     const htmlContent = documentContent || 'No content';
     doc.html(htmlContent, {
       callback: function (doc) {
-        doc.save(`${documentTitle}.pdf`); // Use documentTitle for saving
+        doc.save(`${documentTitle}.pdf`);
       },
       x: 10,
       y: 10,
@@ -79,31 +81,31 @@ export default function Home() {
     });
 
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${documentTitle}.docx`); // Use documentTitle for saving
+    saveAs(blob, `${documentTitle}.docx`);
   };
 
   return (
     <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Left Side - Document Generator */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-2">Document Generator</h2>
+        <div className="md:col-span-1 bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="text-xl font-bold mb-2">Document Generator</h2>
           <p className="text-sm text-gray-600 mb-4">
             Enter a prompt to generate a formatted document.
           </p>
           <textarea
-            className="w-full h-64 p-4 border rounded-lg mb-4 bg-gray-100 resize-none"
+            className="w-full h-64 p-4 border rounded-lg bg-gray-100 resize-none"
             placeholder="Enter your document prompt here..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
-          <input
-            type="text"
-            className="w-full p-2 border rounded-lg mb-4"
-            placeholder="Enter document title..."
-            value={documentTitle}
-            onChange={(e) => setDocumentTitle(e.target.value)} // Input for document title
+          
+          {/* Document Type Selector */}
+          <DocumentTypeSelector 
+            selectedType={documentType} 
+            onChange={(e) => setDocumentType(e.target.value)} 
           />
+
           <div className="flex space-x-2">
             <button
               className="bg-gray-300 text-black px-4 py-2 rounded"
@@ -118,62 +120,25 @@ export default function Home() {
             >
               {isLoading ? 'Generating...' : 'Generate'}
             </button>
-            <button
-              className="bg-gray-300 text-black px-4 py-2 rounded"
-            >
-              Edit
-            </button>
-            <button
-              className="bg-gray-300 text-black px-4 py-2 rounded flex items-center"
-            >
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
-              Edit
-            </button>
           </div>
         </div>
-
+  
         {/* Right Side - Document Preview */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-2">Document Preview</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            This is how your document will be formatted.
-          </p>
+        <div className="md:col-span-4 bg-white p-6 rounded-lg shadow">
           <input
             type="text"
-            className="w-full p-2 border rounded-lg mb-4"
-            value={documentTitle} // Editable title for preview
-            onChange={(e) => setDocumentTitle(e.target.value)} // Update title in real-time
+            className="text-2xl font-bold mb-2 w-full border-0 focus:ring-0"
+            value={documentTitle}
+            onChange={(e) => setDocumentTitle(e.target.value)}
+            placeholder="Document Title"
           />
-          <div className="bg-white border rounded-lg p-4 min-h-[300px] mb-4">
-            {documentContent ? (
-              <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: documentContent }} />
-              </div>
-            ) : (
-              <div>
-                <h1 className="text-2xl font-bold mb-4">Introduction</h1>
-                <p className="mb-4">
-                  This is a sample document generated based on the users prompt. The
-                  content and formatting will adjust dynamically as the user updates
-                  the prompt.
-                </p>
-                <h2 className="text-xl font-bold mb-2">Key Highlights</h2>
-                <ul className="list-disc pl-5 mb-4">
-                  <li>Clean, professional layout</li>
-                  <li>Automatic formatting based on prompt</li>
-                  <li>Export to PDF or DOCX</li>
-                  <li>Edit document directly in the tool</li>
-                </ul>
-                <h2 className="text-xl font-bold mb-2">Conclusion</h2>
-                <p>
-                  This document generator tool provides a seamless experience for
-                  creating professional-looking documents with minimal effort.
-                </p>
-              </div>
-            )}
-          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Here you can see your formatted document.
+          </p>
+          <RichTextEditor 
+            value={documentContent}
+            onChange={setDocumentContent}
+          />
           {documentContent && (
             <div className="flex justify-between">
               <button
