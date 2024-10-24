@@ -1,12 +1,33 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 const CardSpotlight = () => {
   const divRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState(0);
-  const [translateY, setTranslateY] = useState(20); // Initial translate Y position
+  const [opacity, setOpacity] = useState(1); // Set initial opacity to 1
+  const [translateY, setTranslateY] = useState(0); // Set initial translate Y position to 0
+  const [texts, setTexts] = useState([
+    "Give prompts to generate documents",
+    "Get results in seconds",
+    "Edit the results",
+  ]); // Added state for multiple texts
+
+  const [currentTextIndex, setCurrentTextIndex] = useState(0); // Track the current text index
+  const [textVisible, setTextVisible] = useState(true); // Track text visibility
+
+  // New effect to change text periodically with fade animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTextVisible(false); // Start fading out
+      setTimeout(() => {
+        setCurrentTextIndex((prevIndex) => (prevIndex + 1) % texts.length); // Update text after fade out
+        setTextVisible(true); // Fade back in
+      }, 500); // Fade out duration (same as transition time)
+    }, 3000); // Change text every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [texts.length]);
 
   const handleMouseMove = (e) => {
     if (!divRef.current || isFocused) return;
@@ -30,12 +51,12 @@ const CardSpotlight = () => {
   };
 
   const handleMouseEnter = () => {
-    setOpacity(1);
+    setOpacity(1); // Keep text visible on hover
     setTranslateY(0); // Slide up
   };
 
   const handleMouseLeave = () => {
-    setOpacity(0);
+    setOpacity(1); // Keep text visible when not hovering
     setTranslateY(20); // Slide down
   };
 
@@ -57,9 +78,12 @@ const CardSpotlight = () => {
         }}
       />
       <p
-        className={`text-sm text-gray-200 transform transition-all duration-300 ease-in-out opacity-${opacity} translate-y-${translateY}`}
+        className={`text-sm text-gray-200 transform transition-all duration-300 ease-in-out opacity-${opacity} translate-y-${translateY} ${
+          textVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{ transition: 'opacity 0.5s ease-in-out' }} // Smooth fade in and fade out
       >
-        To be updated....
+        {texts[currentTextIndex]} {/* Updated to display current text */}
       </p>
     </div>
   );

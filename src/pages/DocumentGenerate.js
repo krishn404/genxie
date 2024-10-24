@@ -4,16 +4,20 @@ import { jsPDF } from 'jspdf';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
-import DocumentTypeSelector from '../components/DocumentTypeSelector'; // Import the new component
+import DocumentTypeSelector from '../components/DocumentTypeSelector';
+import PageSelector from '../components/PageSelector'; 
+import { AppleStyleDock } from '../components/AppleStyleDock';
+import Navbar from '../components/Navbar'; 
 
 export default function DocumentGenerate() {
   const [prompt, setPrompt] = useState('');
   const [documentContent, setDocumentContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [documentTitle, setDocumentTitle] = useState('Untitled Document');
-  const [documentType, setDocumentType] = useState('Report'); // New state for document type
-
-  // Function to generate the formatted document from the Gemini API
+  const [documentType, setDocumentType] = useState('Report');
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [pages, setPages] = useState(1); 
+  
   const generateDocument = async () => {
     if (!prompt) {
       alert('Please enter a prompt');
@@ -22,7 +26,7 @@ export default function DocumentGenerate() {
     
     setIsLoading(true);
     try {
-      const result = await getFormattedDocument(prompt);
+      const result = await getFormattedDocument(prompt, pages);
       
       if (result && result.formattedText) {
         setDocumentContent(result.formattedText);
@@ -38,14 +42,12 @@ export default function DocumentGenerate() {
     }
   };
 
-  // Function to strip HTML tags and decode entities
   const stripHtml = (html) => {
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
   };
 
-  // Exporting the formatted content as PDF
   const exportAsPDF = () => {
     const doc = new jsPDF();
     const htmlContent = documentContent || 'No content';
@@ -58,14 +60,12 @@ export default function DocumentGenerate() {
     });
   };
 
-  // Function to convert HTML to plain text
   const convertHtmlToPlainText = (html) => {
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
     return tmp.innerText || tmp.textContent || '';
   };
 
-  // Exporting the formatted content as DOCX
   const exportAsDocx = async () => {
     const plainText = convertHtmlToPlainText(documentContent || 'No content');
     const doc = new Document({
@@ -84,23 +84,30 @@ export default function DocumentGenerate() {
     saveAs(blob, `${documentTitle}.docx`);
   };
 
+  // Function to toggle the theme
+const toggleTheme = () => {
+    console.log('Theme toggled'); 
+    setIsDarkTheme((prev) => !prev);
+};
+
+
   return (
-    <div className="container mx-auto p-6 bg-gray-100 min-h-screen">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <div className={`container mx-auto p-6 ${isDarkTheme ? 'bg-black' : 'bg-[#b9d8f2]'} min-h-screen flex flex-col`}>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 flex-grow">
         {/* Left Side - Document Generator */}
-        <div className="md:col-span-1 bg-white p-6 rounded-lg shadow space-y-4">
+        <div className="md:col-span-1 bg-white bg-opacity-80  h-[625px] backdrop-blur-md p-6 mt-8 rounded-lg shadow-2xl space-y-5 sticky top-0">
           <h2 className="text-xl font-bold mb-2">Document Generator</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Enter a prompt to generate a formatted document.
-          </p>
+          <p className="text-sm text-gray-500 mb-4">Enter a prompt to generate a formatted document.</p>
           <textarea
-            className="w-full h-64 p-4 border rounded-lg bg-gray-100 resize-none"
+            className="w-full h-64 p-4 border rounded-lg bg-gray-100 resize-none shadow-inner"
             placeholder="Enter your document prompt here..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
           
-          {/* Document Type Selector */}
+          
+          {/* <PageSelector pages={pages} setPages={setPages} /> */}
+
           <DocumentTypeSelector 
             selectedType={documentType} 
             onChange={(e) => setDocumentType(e.target.value)} 
@@ -108,13 +115,13 @@ export default function DocumentGenerate() {
 
           <div className="flex space-x-2">
             <button
-              className="bg-gray-300 text-black px-4 py-2 rounded"
+              className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-sm transition-transform transform hover:scale-105"
               onClick={() => setPrompt('')}
             >
               Clear
             </button>
             <button
-              className="bg-gray-300 text-black px-4 py-2 rounded"
+              className="bg-[#f8b9b3] text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
               onClick={generateDocument}
               disabled={isLoading}
             >
@@ -122,19 +129,17 @@ export default function DocumentGenerate() {
             </button>
           </div>
         </div>
-  
+
         {/* Right Side - Document Preview */}
-        <div className="md:col-span-4 bg-white p-6 rounded-lg shadow">
+        <div className="md:col-span-4 bg-[#F7F7F7] mt-8 bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-lg overflow-y-auto h-[calc(100vh-200px)]"> {/* Adjust height as needed */}
           <input
             type="text"
-            className="text-2xl font-bold mb-2 w-full border-0 focus:ring-0"
+            className="text-2xl font-bold mb-2 w-full border-0 focus:ring-0 bg-transparent"
             value={documentTitle}
             onChange={(e) => setDocumentTitle(e.target.value)}
             placeholder="Document Title"
           />
-          <p className="text-sm text-gray-600 mb-4">
-            Here you can see your formatted document.
-          </p>
+          <p className="text-sm text-gray-500 mb-4">Here you can see your formatted document.</p>
           <RichTextEditor 
             value={documentContent}
             onChange={setDocumentContent}
@@ -142,13 +147,13 @@ export default function DocumentGenerate() {
           {documentContent && (
             <div className="flex justify-between">
               <button
-                className="bg-gray-300 text-black px-4 py-2 rounded"
+                className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
                 onClick={exportAsPDF}
               >
                 Export to PDF
               </button>
               <button
-                className="bg-gray-300 text-black px-4 py-2 rounded"
+                className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
                 onClick={exportAsDocx}
               >
                 Export to DOCX
@@ -156,6 +161,10 @@ export default function DocumentGenerate() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="flex justify-center mt-4 sticky bottom-0 bg-white"> 
+        <Navbar onThemeToggle={toggleTheme} />
       </div>
     </div>
   );

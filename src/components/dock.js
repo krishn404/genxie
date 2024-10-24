@@ -1,3 +1,4 @@
+// src/components/Dock.js
 'use client';
 
 import {
@@ -17,7 +18,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils'; // Ensure this path is correct
 
 const DOCK_HEIGHT = 128;
 const DEFAULT_MAGNIFICATION = 80;
@@ -74,8 +75,8 @@ function Dock({
           mouseX.set(Infinity);
         }}
         className={cn(
-          'mx-auto flex w-fit gap-4 rounded-2xl bg-gray-50 px-4 dark:bg-neutral-900',
-          className
+            'mx-auto flex w-fit gap-4 rounded-xl bg-[#e8b5fd81] px-4 backdrop-blur-[11.5px] shadow-lg shadow-[rgba(31,38,135,0)] border border-[rgba(255,255,255,0.18)]',
+            className
         )}
         style={{ height: panelHeight }}
         role='toolbar'
@@ -91,9 +92,7 @@ function Dock({
 
 function DockItem({ children, className }) {
   const ref = useRef(null);
-
   const { distance, magnification, mouseX, spring } = useDock();
-
   const isHovered = useMotionValue(0);
 
   const mouseDistance = useTransform(mouseX, (val) => {
@@ -168,7 +167,6 @@ function DockLabel({ children, className, ...rest }) {
 
 function DockIcon({ children, className, ...rest }) {
   const width = rest.width;
-
   const widthTransform = useTransform(width, (val) => val / 2);
 
   return (
@@ -181,4 +179,6 @@ function DockIcon({ children, className, ...rest }) {
   );
 }
 
-export { Dock, DockIcon, DockItem, DockLabel };
+export { Dock, DockItem, DockLabel, DockIcon 
+
+};

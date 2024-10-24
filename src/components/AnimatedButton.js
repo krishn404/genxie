@@ -1,12 +1,11 @@
-// src/components/AnimatedButton.js
 import { useRouter } from 'next/router';
 
 const AnimatedButton = ({ onClick }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    onClick(); // Call the passed onClick function
-    router.push('/DocumentGenerate'); // Navigate to the DocumentGenerate page
+    onClick(); 
+    router.push('/DocumentGenerate'); 
   };
 
   return (
