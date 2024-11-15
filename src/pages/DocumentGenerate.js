@@ -48,7 +48,7 @@ export default function DocumentGenerate() {
     return tmp.textContent || tmp.innerText || '';
   };
 
-  const exportAsPDF = () => {
+    const exportAsPDF = () => {
     const doc = new jsPDF();
     const htmlContent = documentContent || 'No content';
     doc.html(htmlContent, {
@@ -67,21 +67,62 @@ export default function DocumentGenerate() {
   };
 
   const exportAsDocx = async () => {
-    const plainText = convertHtmlToPlainText(documentContent || 'No content');
     const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              children: [new TextRun(plainText)],
-            }),
-          ],
-        },
-      ],
+        sections: [
+            {
+                children: parseHtmlToDocx(documentContent || 'No content'),
+            },
+        ],
     });
 
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `${documentTitle}.docx`);
+  };
+
+  // Function to parse HTML and convert it to docx elements
+  const parseHtmlToDocx = (html) => {
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+
+    const children = [];
+    Array.from(tmp.childNodes).forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            switch (node.tagName) {
+                case 'H1':
+                    children.push(new Paragraph({
+                        children: [new TextRun({ text: node.innerText, bold: true, size: 32 })],
+                    }));
+                    break;
+                case 'H2':
+                    children.push(new Paragraph({
+                        children: [new TextRun({ text: node.innerText, bold: true, size: 28 })],
+                    }));
+                    break;
+                case 'H3':
+                    children.push(new Paragraph({
+                        children: [new TextRun({ text: node.innerText, bold: true, size: 24 })],
+                    }));
+                    break;
+                case 'P':
+                    children.push(new Paragraph({
+                        children: [new TextRun(node.innerText)],
+                    }));
+                    break;
+                case 'UL':
+                    Array.from(node.children).forEach((li) => {
+                        children.push(new Paragraph({
+                            children: [new TextRun(`• ${li.innerText}`)],
+                        }));
+                    });
+                    break;
+                // Add more cases for other HTML elements as needed
+                default:
+                    break;
+            }
+        }
+    });
+
+    return children;
   };
 
   // Function to toggle the theme
