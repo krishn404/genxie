@@ -17,7 +17,7 @@
 
 - **Frontend**: React, Tailwind CSS  
 - **Backend**: Node.js, Express  
-- **AI Integration**: Gemini AI API (powered by Google’s Gemini model)  
+- **AI Integration**: Gemini AI API (1.5 flash)  
 - **File Export**: PDF and DOCX generation libraries  
 
 ---
@@ -31,7 +31,15 @@
 1. **Clone the Repository**  
    ```bash  
    git clone https://github.com/krishn404/genxie.git  
-   cd genxie  
+   cd genxie
+   
+2. ### Add .env.local File for Gemini AI Integration  
+
+Create a `.env.local` file in the root directory of the project and add the following environment variable to connect to Gemini AI:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 ## 📦 Installation  
 npm run dev  
 # or  
