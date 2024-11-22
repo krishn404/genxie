@@ -23,60 +23,51 @@
 ---
 
 ### Prerequisites  
-- **Node.js**: v14 or higher  
-- **Package Manager**: npm or yarn  
+- Node.js (v14 or higher)  
+- npm or yarn  
 
-### Installation Steps  
+### Steps  
 
 1. **Clone the Repository**  
    ```bash  
    git clone https://github.com/krishn404/genxie.git  
-   cd genxie  
-   ```
+   cd genxie
+   
+2. ### Add .env.local File for Gemini AI Integration  
 
-2. **Add .env.local File for Gemini AI Integration**  
-   Create a `.env.local` file in the root directory of the project and add the following environment variable to connect to Gemini AI:
-   ```bash
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+Create a `.env.local` file in the root directory of the project and add the following environment variable to connect to Gemini AI:
 
-3. **Install Dependencies**  
-   Run the following command to install the necessary dependencies:
-   ```bash
-   npm install  
-   # or  
-   yarn install  
-   ```
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+## 📦 Installation  
+npm run dev  
+# or  
+yarn dev  
 
-4. **Run the Application**  
-   Start the development server:
-   ```bash
-   npm run dev  
-   # or  
-   yarn dev  
-   ```
 
-### Access the Application  
+# Access the Application
+
 Open [http://localhost:3000](http://localhost:3000) in your browser to access the application.
 
-## 📖 Contributing  
+## 📖 Contributing
 
 We welcome contributions from the open-source community! Here's how you can help:
 
-1. **Fork the repository.**
-2. **Create a feature branch:**
+1. Fork the repository.
+2. Create a feature branch:
     ```bash
     git checkout -b feature/your-feature-name
     ```
-3. **Commit your changes:**
+3. Commit your changes:
     ```bash
     git commit -m "Add your descriptive message here"
     ```
-4. **Push your branch to your fork:**
+4. Push your branch to your fork:
     ```bash
     git push origin feature/your-feature-name
     ```
-5. **Open a pull request** to the main repository.
+5. Open a pull request to the main repository.
 
 Feel free to check the issues section for tasks to work on!
 
