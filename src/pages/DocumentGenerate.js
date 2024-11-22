@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getFormattedDocument } from '../lib/gemini.js';
 import { jsPDF } from 'jspdf';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
@@ -48,23 +49,123 @@ export default function DocumentGenerate() {
     return tmp.textContent || tmp.innerText || '';
   };
 
+  const exportHtmlToPdf = async (html, fileName = documentTitle) => {
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontSize = 12;
+    const margin = 30;
+  
+    // Create initial page
+    let page = pdfDoc.addPage();
+    let { width, height } = page.getSize();
+    let yOffset = height - margin; // Start from top margin
+  
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+  
+    // Function to calculate text wrapping
+    const wrapText = (text, maxWidth, font, size) => {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+  
+      words.forEach((word) => {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const textWidth = font.widthOfTextAtSize(testLine, size);
+        if (textWidth <= maxWidth) {
+          currentLine = testLine;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      });
+  
+      if (currentLine) lines.push(currentLine);
+      return lines;
+    };
+  
+    const addTextToPage = (text, options = {}) => {
+      const { size = fontSize, bold = false, listItem = false, extraSpacing = 0 } = options;
+      const maxWidth = width - 2 * margin;
+  
+      // Add extra spacing before the new text
+      yOffset -= extraSpacing;
+  
+      // Calculate line height
+      const lineHeight = size + 2;
+      const textLines = wrapText(text, maxWidth, font, size);
+  
+      textLines.forEach((line) => {
+        if (yOffset - lineHeight < margin) {
+          // Add a new page when the current page is full
+          page = pdfDoc.addPage();
+          yOffset = height - margin;
+        }
+        page.drawText(listItem ? `• ${line}` : line, {
+          x: margin + (listItem ? 10 : 0),
+          y: yOffset,
+          size,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        yOffset -= lineHeight;
+      });
+    };
+  
+    Array.from(tmp.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const text = node.innerText.trim();
+        if (!text) return;
+  
+        switch (node.tagName) {
+          case 'H1':
+            addTextToPage(text, { size: 24, bold: true, extraSpacing: 20 });
+            yOffset -= 10; // Add extra spacing
+            break;
+          case 'H2':
+            addTextToPage(text, { size: 20, bold: true, extraSpacing: 15 });
+            yOffset -= 8;
+            break;
+          case 'H3':
+            addTextToPage(text, { size: 16, bold: true, extraSpacing: 10 });
+            yOffset -= 6;
+            break;
+          case 'P':
+            addTextToPage(text, { extraSpacing: 5 });
+            yOffset -= 4;
+            break;
+          case 'UL':
+            Array.from(node.children).forEach((li) => {
+              addTextToPage(li.innerText.trim(), { listItem: true, extraSpacing: 5 });
+            });
+            yOffset -= 6; // Add spacing after the list
+            break;
+          default:
+            break;
+        }
+      }
+    });
+  
+    // Serialize the PDFDocument to bytes (a Uint8Array)
+    const pdfBytes = await pdfDoc.save();
+  
+    // Automatically trigger download
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+  };
+
   const exportAsPDF = async () => {
     const doc = new jsPDF();
     const htmlContent = documentContent || 'No content';
 
     // Use the RichTextEditor content for better formatting
-    const formattedContent = convertHtmlToPlainText(htmlContent); // Convert HTML to plain text for PDF
-    const lines = doc.splitTextToSize(formattedContent, 190); // Adjust width as needed
-    doc.text(lines, 10, 10);
-    
-    doc.save(`${documentTitle}.pdf`);
-  };
+    exportHtmlToPdf(htmlContent) // Convert HTML to plain text for PDF
+  }
+  
 
-  const convertHtmlToPlainText = (html) => {
-    const tmp = document.createElement('DIV');
-    tmp.innerHTML = html;
-    return tmp.innerText || tmp.textContent || '';
-  };
 
   const exportAsDocx = async () => {
     const doc = new Document({
