@@ -5,9 +5,9 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
 import DocumentTypeSelector from '../components/DocumentTypeSelector';
-import PageSelector from '../components/PageSelector'; 
 import { AppleStyleDock } from '../components/AppleStyleDock';
 import Navbar from '../components/Navbar'; 
+import html2canvas from 'html2canvas';
 
 export default function DocumentGenerate() {
   const [prompt, setPrompt] = useState('');
@@ -16,7 +16,7 @@ export default function DocumentGenerate() {
   const [documentTitle, setDocumentTitle] = useState('Untitled Document');
   const [documentType, setDocumentType] = useState('Report');
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const [pages, setPages] = useState(1); 
+  const [pages, setPages] = useState(1);
   
   const generateDocument = async () => {
     if (!prompt) {
@@ -48,16 +48,16 @@ export default function DocumentGenerate() {
     return tmp.textContent || tmp.innerText || '';
   };
 
-    const exportAsPDF = () => {
+  const exportAsPDF = async () => {
     const doc = new jsPDF();
     const htmlContent = documentContent || 'No content';
-    doc.html(htmlContent, {
-      callback: function (doc) {
-        doc.save(`${documentTitle}.pdf`);
-      },
-      x: 10,
-      y: 10,
-    });
+
+    // Use the RichTextEditor content for better formatting
+    const formattedContent = convertHtmlToPlainText(htmlContent); // Convert HTML to plain text for PDF
+    const lines = doc.splitTextToSize(formattedContent, 190); // Adjust width as needed
+    doc.text(lines, 10, 10);
+    
+    doc.save(`${documentTitle}.pdf`);
   };
 
   const convertHtmlToPlainText = (html) => {
@@ -68,143 +68,141 @@ export default function DocumentGenerate() {
 
   const exportAsDocx = async () => {
     const doc = new Document({
-        sections: [
-            {
-                children: parseHtmlToDocx(documentContent || 'No content'),
-            },
-        ],
+      sections: [
+        {
+          children: parseHtmlToDocx(documentContent || 'No content'),
+        },
+      ],
     });
 
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `${documentTitle}.docx`);
   };
 
-  // Function to parse HTML and convert it to docx elements
   const parseHtmlToDocx = (html) => {
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
 
     const children = [];
     Array.from(tmp.childNodes).forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            switch (node.tagName) {
-                case 'H1':
-                    children.push(new Paragraph({
-                        children: [new TextRun({ text: node.innerText, bold: true, size: 32 })],
-                    }));
-                    break;
-                case 'H2':
-                    children.push(new Paragraph({
-                        children: [new TextRun({ text: node.innerText, bold: true, size: 28 })],
-                    }));
-                    break;
-                case 'H3':
-                    children.push(new Paragraph({
-                        children: [new TextRun({ text: node.innerText, bold: true, size: 24 })],
-                    }));
-                    break;
-                case 'P':
-                    children.push(new Paragraph({
-                        children: [new TextRun(node.innerText)],
-                    }));
-                    break;
-                case 'UL':
-                    Array.from(node.children).forEach((li) => {
-                        children.push(new Paragraph({
-                            children: [new TextRun(`• ${li.innerText}`)],
-                        }));
-                    });
-                    break;
-                // Add more cases for other HTML elements as needed
-                default:
-                    break;
-            }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        switch (node.tagName) {
+          case 'H1':
+            children.push(new Paragraph({
+              children: [new TextRun({ text: node.innerText, bold: true, size: 32 })],
+            }));
+            break;
+          case 'H2':
+            children.push(new Paragraph({
+              children: [new TextRun({ text: node.innerText, bold: true, size: 28 })],
+            }));
+            break;
+          case 'H3':
+            children.push(new Paragraph({
+              children: [new TextRun({ text: node.innerText, bold: true, size: 24 })],
+            }));
+            break;
+          case 'P':
+            children.push(new Paragraph({
+              children: [new TextRun(node.innerText)],
+            }));
+            break;
+          case 'UL':
+            Array.from(node.children).forEach((li) => {
+              children.push(new Paragraph({
+                children: [new TextRun(`• ${li.innerText}`)],
+              }));
+            });
+            break;
+          default:
+            break;
         }
+      }
     });
 
     return children;
   };
 
-  // Function to toggle the theme
-const toggleTheme = () => {
-    console.log('Theme toggled'); 
+  const toggleTheme = () => {
     setIsDarkTheme((prev) => !prev);
-};
-
+  };
 
   return (
-    <div className={`container mx-auto p-6 ${isDarkTheme ? 'bg-black' : 'bg-[#b9d8f2]'} min-h-screen flex flex-col`}>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 flex-grow">
-        {/* Left Side - Document Generator */}
-        <div className="md:col-span-1 bg-white bg-opacity-80  h-[625px] backdrop-blur-md p-6 mt-8 rounded-lg shadow-2xl space-y-5 sticky top-0">
-          <h2 className="text-xl font-bold mb-2">Document Generator</h2>
-          <p className="text-sm text-gray-500 mb-4">Enter a prompt to generate a formatted document.</p>
-          <textarea
-            className="w-full h-64 p-4 border rounded-lg bg-gray-100 resize-none shadow-inner"
-            placeholder="Enter your document prompt here..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          
-          
-          {/* <PageSelector pages={pages} setPages={setPages} /> */}
+    <div className={`min-h-screen ${isDarkTheme ? 'bg-black' : 'bg-[#b9d8f2]'}`}>
+      <div className="container mx-auto p-6">
+        <div className="flex gap-6">
+          {/* Left Side - Document Generator - Now sticky */}
+          <div className="w-1/5 flex-shrink-0">
+            <div className="sticky top-6 bg-white bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-2xl space-y-5">
+              <h2 className="text-xl font-bold mb-2">Document Generator</h2>
+              <p className="text-sm text-gray-500 mb-4">Enter a prompt to generate a formatted document.</p>
+              <textarea
+                className="w-full h-64 p-4 border rounded-lg bg-gray-100 resize-none shadow-inner"
+                placeholder="Enter your document prompt here..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              
+              <DocumentTypeSelector 
+                selectedType={documentType} 
+                onChange={(e) => setDocumentType(e.target.value)} 
+              />
 
-          <DocumentTypeSelector 
-            selectedType={documentType} 
-            onChange={(e) => setDocumentType(e.target.value)} 
-          />
-
-          <div className="flex space-x-2">
-            <button
-              className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-sm transition-transform transform hover:scale-105"
-              onClick={() => setPrompt('')}
-            >
-              Clear
-            </button>
-            <button
-              className="bg-[#f8b9b3] text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
-              onClick={generateDocument}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Generating...' : 'Generate'}
-            </button>
-          </div>
-        </div>
-
-        {/* Right Side - Document Preview */}
-        <div className="md:col-span-4 bg-[#F7F7F7] mt-8 bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-lg overflow-y-auto h-[calc(100vh-200px)]"> {/* Adjust height as needed */}
-          <input
-            type="text"
-            className="text-2xl font-bold mb-2 w-full border-0 focus:ring-0 bg-transparent"
-            value={documentTitle}
-            onChange={(e) => setDocumentTitle(e.target.value)}
-            placeholder="Document Title"
-          />
-          <p className="text-sm text-gray-500 mb-4">Here you can see your formatted document.</p>
-          <RichTextEditor 
-            value={documentContent}
-            onChange={setDocumentContent}
-          />
-          {documentContent && (
-            <div className="flex justify-between">
-              <button
-                className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
-                onClick={exportAsPDF}
-              >
-                Export to PDF
-              </button>
-              <button
-                className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
-                onClick={exportAsDocx}
-              >
-                Export to DOCX
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-sm transition-transform transform hover:scale-105"
+                  onClick={() => setPrompt('')}
+                >
+                  Clear
+                </button>
+                <button
+                  className="bg-[#f8b9b3] text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
+                  onClick={generateDocument}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Generating...' : 'Generate'}
+                </button>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Right Side - Document Preview - Scrollable */}
+          <div className="flex-grow">
+            <div className="bg-[#F7F7F7] bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-lg">
+              <input
+                type="text"
+                className="text-2xl font-bold mb-2 w-full border-0 focus:ring-0 bg-transparent"
+                value={documentTitle}
+                onChange={(e) => setDocumentTitle(e.target.value)}
+                placeholder="Document Title"
+              />
+              <p className="text-sm text-gray-500 mb-4">Here you can see your formatted document.</p>
+              <RichTextEditor 
+                value={documentContent}
+                onChange={setDocumentContent}
+              />
+              {documentContent && (
+                <div className="flex justify-between mt-4">
+                  <button
+                    className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
+                    onClick={exportAsPDF}
+                  >
+                    Export to PDF
+                  </button>
+                  <button
+                    className="bg-gray-200 text-black px-4 py-2 rounded-full shadow-md transition-transform transform hover:scale-105"
+                    onClick={exportAsDocx}
+                  >
+                    Export to DOCX
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-center mt-4 sticky bottom-0 bg-white"> 
+      <div className="sticky bottom-0 bg-white">
         <Navbar onThemeToggle={toggleTheme} />
       </div>
     </div>

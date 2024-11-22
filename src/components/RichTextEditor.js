@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import Tooltip from './Tooltip'; // Import the new Tooltip component
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -64,7 +65,7 @@ const RichTextEditor = ({ value, onChange }) => {
   };
 
   // Add tooltips after component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     const addTooltips = () => {
       const toolbar = document.querySelector('.ql-toolbar');
       if (toolbar) {
@@ -76,27 +77,8 @@ const RichTextEditor = ({ value, onChange }) => {
             ?.replace('ql-', '');
 
           if (format && tooltipContent[format]) {
-            // Add tooltip attributes
-            button.setAttribute('title', tooltipContent[format]);
-            
-            // Add hover styles
-            button.className = `${button.className} relative transition-all duration-200`;
-            
-            // Add hover styles with CSS
-            button.style.cssText = `
-              position: relative;
-              cursor: pointer;
-            `;
-
-            // Add hover effect
-            button.addEventListener('mouseenter', () => {
-              button.style.backgroundColor = '#f3f4f6';
-              button.style.borderRadius = '4px';
-            });
-
-            button.addEventListener('mouseleave', () => {
-              button.style.backgroundColor = 'transparent';
-            });
+            // Use Tooltip component for custom tooltip
+            Tooltip(button, tooltipContent[format]); // Call Tooltip function
           }
         });
 
@@ -110,21 +92,11 @@ const RichTextEditor = ({ value, onChange }) => {
 
     // Wait for toolbar to be rendered
     setTimeout(addTooltips, 100);
-  }, [tooltipContent]); // Added tooltipContent as a dependency
+  }, []); // Removed tooltipContent as a dependency
 
   return (
-    <div className="bg-gray-100 border rounded-lg p-4 mt-5 min-h-[500px] mb-4">
-      <style jsx global>{`
-        .ql-toolbar button {
-          padding: 4px 8px;
-          margin: 2px;
-        }
-        
-        .ql-toolbar button:hover {
-          background-color: #f3f4f6;
-          border-radius: 4px;
-        }
-      `}</style>
+    <div className="bg-gray-100 border rounded-lg p-4 mt-5 mb-4" style={{ width: '210mm', height: '297mm', margin: '0 auto' }}>
+      
       <ReactQuill 
         ref={quillRef} // Attach the ref here
         value={value} 
