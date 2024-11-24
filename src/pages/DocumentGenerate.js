@@ -6,9 +6,11 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
 import DocumentTypeSelector from '../components/DocumentTypeSelector';
+import DocumentUploader from '../components/DocumentUploader';
 import { AppleStyleDock } from '../components/AppleStyleDock';
 import Navbar from '../components/Navbar'; 
-import html2canvas from 'html2canvas';
+import InlineToolbar from '../components/InlineToolbar';
+import mammoth from 'mammoth'; // Import mammoth for .docx conversion
 
 export default function DocumentGenerate() {
   const [prompt, setPrompt] = useState('');
@@ -17,8 +19,23 @@ export default function DocumentGenerate() {
   const [documentTitle, setDocumentTitle] = useState('Untitled Document');
   const [documentType, setDocumentType] = useState('Report');
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const [pages, setPages] = useState(1);
-  
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0, visible: false });
+
+  const handleUpload = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const arrayBuffer = e.target.result;
+      mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+        .then((result) => {
+          setDocumentContent(result.value); // Set the HTML content to the editor
+        })
+        .catch((err) => {
+          console.error("Error converting .docx to HTML:", err);
+        });
+    };
+    reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
+  };
+
   const generateDocument = async () => {
     if (!prompt) {
       alert('Please enter a prompt');
@@ -27,7 +44,7 @@ export default function DocumentGenerate() {
     
     setIsLoading(true);
     try {
-      const result = await getFormattedDocument(prompt, pages);
+      const result = await getFormattedDocument(prompt);
       
       if (result && result.formattedText) {
         setDocumentContent(result.formattedText);
@@ -43,130 +60,33 @@ export default function DocumentGenerate() {
     }
   };
 
-  const stripHtml = (html) => {
-    const tmp = document.createElement('DIV');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
+  // Define the toggleTheme function
+  const toggleTheme = () => {
+    setIsDarkTheme((prev) => !prev);
   };
 
-  const exportHtmlToPdf = async (html, fileName = documentTitle) => {
-    const pdfDoc = await PDFDocument.create();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontSize = 12;
-    const margin = 30;
-  
-    // Create initial page
-    let page = pdfDoc.addPage();
-    let { width, height } = page.getSize();
-    let yOffset = height - margin; // Start from top margin
-  
-    const tmp = document.createElement('DIV');
-    tmp.innerHTML = html;
-  
-    // Function to calculate text wrapping
-    const wrapText = (text, maxWidth, font, size) => {
-      const words = text.split(' ');
-      const lines = [];
-      let currentLine = '';
-  
-      words.forEach((word) => {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        const textWidth = font.widthOfTextAtSize(testLine, size);
-        if (textWidth <= maxWidth) {
-          currentLine = testLine;
-        } else {
-          lines.push(currentLine);
-          currentLine = word;
-        }
-      });
-  
-      if (currentLine) lines.push(currentLine);
-      return lines;
-    };
-  
-    const addTextToPage = (text, options = {}) => {
-      const { size = fontSize, bold = false, listItem = false, extraSpacing = 0 } = options;
-      const maxWidth = width - 2 * margin;
-  
-      // Add extra spacing before the new text
-      yOffset -= extraSpacing;
-  
-      // Calculate line height
-      const lineHeight = size + 2;
-      const textLines = wrapText(text, maxWidth, font, size);
-  
-      textLines.forEach((line) => {
-        if (yOffset - lineHeight < margin) {
-          // Add a new page when the current page is full
-          page = pdfDoc.addPage();
-          yOffset = height - margin;
-        }
-        page.drawText(listItem ? `• ${line}` : line, {
-          x: margin + (listItem ? 10 : 0),
-          y: yOffset,
-          size,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        yOffset -= lineHeight;
-      });
-    };
-  
-    Array.from(tmp.childNodes).forEach((node) => {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const text = node.innerText.trim();
-        if (!text) return;
-  
-        switch (node.tagName) {
-          case 'H1':
-            addTextToPage(text, { size: 24, bold: true, extraSpacing: 20 });
-            yOffset -= 10; // Add extra spacing
-            break;
-          case 'H2':
-            addTextToPage(text, { size: 20, bold: true, extraSpacing: 15 });
-            yOffset -= 8;
-            break;
-          case 'H3':
-            addTextToPage(text, { size: 16, bold: true, extraSpacing: 10 });
-            yOffset -= 6;
-            break;
-          case 'P':
-            addTextToPage(text, { extraSpacing: 5 });
-            yOffset -= 4;
-            break;
-          case 'UL':
-            Array.from(node.children).forEach((li) => {
-              addTextToPage(li.innerText.trim(), { listItem: true, extraSpacing: 5 });
-            });
-            yOffset -= 6; // Add spacing after the list
-            break;
-          default:
-            break;
-        }
-      }
-    });
-  
-    // Serialize the PDFDocument to bytes (a Uint8Array)
-    const pdfBytes = await pdfDoc.save();
-  
-    // Automatically trigger download
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
+  // Define the handleBold function
+  const handleBold = () => {
+    // Implement bold functionality
+    // This is a placeholder; you should implement the actual logic to toggle bold formatting
+    console.log("Bold action triggered");
   };
 
+  // Define the handleItalic function
+  const handleItalic = () => {
+    // Implement italic functionality
+    // This is a placeholder; you should implement the actual logic to toggle italic formatting
+    console.log("Italic action triggered");
+  };
+
+  // Define the exportAsPDF function
   const exportAsPDF = async () => {
-    const doc = new jsPDF();
-    const htmlContent = documentContent || 'No content';
+    const pdf = new jsPDF();
+    pdf.text(documentContent || 'No content', 10, 10); // Add content to PDF
+    pdf.save(`${documentTitle}.pdf`); // Save the PDF with the document title
+  };
 
-    // Use the RichTextEditor content for better formatting
-    exportHtmlToPdf(htmlContent) // Convert HTML to plain text for PDF
-  }
-  
-
-
+  // Define the exportAsDocx function
   const exportAsDocx = async () => {
     const doc = new Document({
       sections: [
@@ -195,25 +115,13 @@ export default function DocumentGenerate() {
             break;
           case 'H2':
             children.push(new Paragraph({
-              children: [new TextRun({ text: node.innerText, bold: true, size: 28 })],
-            }));
-            break;
-          case 'H3':
-            children.push(new Paragraph({
               children: [new TextRun({ text: node.innerText, bold: true, size: 24 })],
             }));
             break;
           case 'P':
             children.push(new Paragraph({
-              children: [new TextRun(node.innerText)],
+              children: [new TextRun({ text: node.innerText })],
             }));
-            break;
-          case 'UL':
-            Array.from(node.children).forEach((li) => {
-              children.push(new Paragraph({
-                children: [new TextRun(`• ${li.innerText}`)],
-              }));
-            });
             break;
           default:
             break;
@@ -224,16 +132,13 @@ export default function DocumentGenerate() {
     return children;
   };
 
-  const toggleTheme = () => {
-    setIsDarkTheme((prev) => !prev);
-  };
-
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'bg-black' : 'bg-[#b9d8f2]'}`}>
       <div className="container mx-auto p-6">
-        <div className="flex gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Left Side - Document Generator - Now sticky */}
-          <div className="w-1/5 flex-shrink-0">
+          <div className="w-full md:w-1/5 flex-shrink-0">
+            <DocumentUploader onUpload={handleUpload} />
             <div className="sticky top-6 bg-white bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-2xl space-y-5">
               <h2 className="text-xl font-bold mb-2">Document Generator</h2>
               <p className="text-sm text-gray-500 mb-4">Enter a prompt to generate a formatted document.</p>
@@ -268,7 +173,7 @@ export default function DocumentGenerate() {
           </div>
 
           {/* Right Side - Document Preview - Scrollable */}
-          <div className="flex-grow">
+          <div className="flex-grow w-full">
             <div className="bg-[#F7F7F7] bg-opacity-80 backdrop-blur-md p-6 rounded-lg shadow-lg">
               <input
                 type="text"
@@ -306,6 +211,7 @@ export default function DocumentGenerate() {
       <div className="sticky bottom-0 bg-white">
         <Navbar onThemeToggle={toggleTheme} />
       </div>
+      <InlineToolbar position={toolbarPosition} onBold={handleBold} onItalic={handleItalic} />
     </div>
   );
 }

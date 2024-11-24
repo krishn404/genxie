@@ -5,7 +5,7 @@ import Tooltip from './Tooltip'; // Import the new Tooltip component
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
-const RichTextEditor = ({ value, onChange }) => {
+const RichTextEditor = ({ value, onChange, fontSize, lineSpacing, textAlign }) => {
   const quillRef = useRef(); // Create a ref for ReactQuill
 
   const modules = {
@@ -69,6 +69,7 @@ const RichTextEditor = ({ value, onChange }) => {
     const addTooltips = () => {
       const toolbar = document.querySelector('.ql-toolbar');
       if (toolbar) {
+        toolbar.classList.add('bg-gray-300'); // Changed from bg-pink-500 to bg-gray-300
         const buttons = toolbar.querySelectorAll('button');
         buttons.forEach(button => {
           // Get the format from the class name
@@ -95,15 +96,16 @@ const RichTextEditor = ({ value, onChange }) => {
   }, []); // Removed tooltipContent as a dependency
 
   return (
-    <div className="bg-gray-100 border rounded-lg p-4 mt-5 mb-4" style={{ width: '210mm', height: '297mm', margin: '0 auto' }}>
-      
+    <div className="bg-gray-100 border border-zink-800 rounded-lg p-4 mt-5 mb-4" style={{ width: '210mm', height: '297mm', margin: '0 auto', lineHeight: lineSpacing, textAlign: textAlign }}>
       <ReactQuill 
-        ref={quillRef} // Attach the ref here
+        ref={quillRef}
         value={value} 
         onChange={onChange} 
         modules={modules}
         placeholder="Your content here..."
-        onRef={(instance) => { quillRef.current = instance }} // Ensure ref is set
+        style={{ fontSize: `${fontSize}px` }} // Apply font size
+        onRef={(instance) => { quillRef.current = instance }}
+        className="border border-zink-800"
       />
     </div>
   );

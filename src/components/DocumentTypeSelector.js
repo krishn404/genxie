@@ -3,8 +3,8 @@
 import React from 'react';
 
 const documentTypes = [
-  'Report',
-  'Thesis',
+  
+  'Abstract',
   'Synopsis',
   'Resume',
   // Add more document types as needed
