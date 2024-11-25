@@ -96,7 +96,7 @@ const RichTextEditor = ({ value, onChange, fontSize, lineSpacing, textAlign }) =
   }, []); // Removed tooltipContent as a dependency
 
   return (
-    <div className="bg-gray-100 border border-zink-800 rounded-lg p-4 mt-5 mb-4" style={{ width: '210mm', height: '297mm', margin: '0 auto', lineHeight: lineSpacing, textAlign: textAlign }}>
+    <div className="bg-gray-100 border border-zink-800 rounded-lg p-4 mt-5 mb-4" style={{ width: '215.9mm', height: '279.4mm', margin: '0 auto', lineHeight: lineSpacing, textAlign: textAlign }}>
       <ReactQuill 
         ref={quillRef}
         value={value} 
