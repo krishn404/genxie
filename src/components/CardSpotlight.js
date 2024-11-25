@@ -78,7 +78,7 @@ const CardSpotlight = () => {
         }}
       />
       <p
-        className={`text-sm text-gray-200 transform transition-all duration-300 ease-in-out opacity-${opacity} translate-y-${translateY} ${
+        className={`text-2xl text-gray-200 transform transition-all duration-300 ease-in-out opacity-${opacity} translate-y-${translateY} ${
           textVisible ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ transition: 'opacity 0.5s ease-in-out' }} // Smooth fade in and fade out

@@ -16,18 +16,18 @@ const Navbar = () => {
     const data = [
         {
             title: 'Home',
-            icon: <HomeIcon className='h-6 w-6 text-neutral-600 dark:text-neutral-300' />,
+            icon: <HomeIcon className='h-6 w-6 text-black' />,
             href: '/LandingPage', // Path to your landing page
         },
         {
             title: 'New Document',
-            icon: <ScrollText className='h-6 w-6 text-neutral-600 dark:text-neutral-300' />,
+            icon: <ScrollText className='h-6 w-6 text-black' />,
             href: '#', // Link for New Document (placeholder)
             onClick: () => setIsConfirmationModalOpen(true) // Open the confirmation modal when clicked
         },
         {
             title: 'Email',
-            icon: <Mail className='h-6 w-6 text-neutral-600 dark:text-neutral-300' />,
+            icon: <Mail className='h-6 w-6 text-black' />,
             href: '#', // Link for Email (placeholder)
             onClick: () => setIsMailModalOpen(true) // Open the mail modal when clicked
         },
@@ -59,7 +59,7 @@ const Navbar = () => {
 
     return (
         <>
-            <motion.div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 py-4 px-8 bg-black backdrop-blur-lg rounded-full shadow-lg flex items-center space-x-8 z-50">
+            <motion.div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 py-2 px-4 bg-black backdrop-blur-lg rounded-full shadow-lg flex items-center space-x-4 z-50">
                 {data.map((item, idx) => (
                     <motion.div
                         key={idx}
@@ -74,7 +74,7 @@ const Navbar = () => {
                         whileHover={{ scale: 1.2 }} // Hover effect to scale up the icon
                         transition={{ type: 'spring', stiffness: 300 }}
                     >
-                        <div className="flex items-center justify-center p-2 rounded-full bg-gray-600/50 hover:bg-gray-600 transition-all">
+                        <div className="flex items-center justify-center p-2 rounded-full bg-white hover:bg-gray-600 transition-all">
                             {item.icon}
                         </div>
                         {/* Tooltip above the icon */}
