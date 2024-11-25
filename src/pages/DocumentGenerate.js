@@ -6,7 +6,6 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
 import DocumentTypeSelector from '../components/DocumentTypeSelector';
-import { AppleStyleDock } from '../components/AppleStyleDock';
 import Navbar from '../components/Navbar'; 
 import html2canvas from 'html2canvas';
 
@@ -315,8 +314,8 @@ export default function DocumentGenerate() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 bg-white">
-        <Navbar onThemeToggle={toggleTheme} />
+      <div className="sticky bottom-0 flex justify-center w-full bg-white">
+        <Navbar/>
       </div>
     </div>
   );

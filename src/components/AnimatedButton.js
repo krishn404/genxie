@@ -4,7 +4,9 @@ const AnimatedButton = ({ onClick }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    onClick(); 
+    if (onClick) {
+      onClick(); 
+    }
     router.push('/DocumentGenerate'); 
   };
 
