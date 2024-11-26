@@ -25,12 +25,12 @@ const Navbar = () => {
             href: '#', // Link for New Document (placeholder)
             onClick: () => setIsConfirmationModalOpen(true) // Open the confirmation modal when clicked
         },
-        {
-            title: 'Email',
-            icon: <Mail className='h-6 w-6 text-black' />,
-            href: '#', // Link for Email (placeholder)
-            onClick: () => setIsMailModalOpen(true) // Open the mail modal when clicked
-        },
+        // {
+        //     title: 'Email',
+        //     icon: <Mail className='h-6 w-6 text-black' />,
+        //     href: '#', // Link for Email (placeholder)
+        //     onClick: () => setIsMailModalOpen(true) // Open the mail modal when clicked
+        // },
     ];
 
     // Handle navigation
