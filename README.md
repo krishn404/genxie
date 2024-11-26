@@ -16,7 +16,6 @@
 ## 🛠️ Tech Stack  
 
 - **Frontend**: React, Tailwind CSS  
-- **Backend**: Node.js, Express  
 - **AI Integration**: Gemini AI API (1.5 flash)  
 - **File Export**: PDF and DOCX generation libraries  
 
