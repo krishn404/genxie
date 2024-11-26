@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { HomeIcon, Mail, ScrollText } from 'lucide-react';
 import { useRouter } from 'next/router'; // For routing to landing page
 import { motion } from 'framer-motion';
-import MailModal from './MailModal'; // Import the MailModal component
 import Modal from './Modal'; // Import the ConfirmationModal component
 
 const Navbar = () => {
@@ -93,12 +92,7 @@ const Navbar = () => {
                 message="You want to discard this document and open a new one?"
             />
 
-            {/* Mail Modal */}
-            <MailModal
-                isOpen={isMailModalOpen}
-                onClose={handleCloseMailModal}
-                message="Fill out the form below to send the document via email."
-            />
+
         </>
     );
 };

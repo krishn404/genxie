@@ -41,6 +41,27 @@ export const getFormattedDocument = async (prompt, pages) => {
     if (response.data && response.data.candidates && response.data.candidates[0].content) {
       const formattedText = response.data.candidates[0].content.parts[0].text;
 
+      // Add formatting for the synopsis
+      if (prompt.includes('synopsis')) {
+        const sections = [
+          'Introduction',
+          'Problem Statement',
+          'Literature Review',
+          'Proposed Solution',
+          'Project Scope',
+          'Modules and Functionalities',
+          'Expected Results',
+          'Conclusion'
+        ];
+        const formattedSections = sections.map(section => `<h2>${section}</h2><p>${formattedText}</p>`).join('');
+        const styledHtml = `<div style="font-family: Times New Roman; line-height: 1.5; margin: 1 inch;">${formattedSections}</div>`;
+        
+        return {
+          formattedText: styledHtml,
+          title: 'Generated Synopsis',
+        };
+      }
+
       const processedText = formattedText
   .replace(/<div class="page-break"><\/div>/g, '<p class="page-break">&nbsp;</p>')
   .replace(/<h1>(.*?)<\/h1>/g, '<h1 class="text-3xl font-bold mb-4">$1</h1>')
